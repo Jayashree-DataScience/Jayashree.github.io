@@ -1,0 +1,98 @@
+<html>
+<head>
+<title>scraper.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+scraper.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">from </span><span class="s1">bs4 </span><span class="s0">import </span><span class="s1">BeautifulSoup</span>
+<span class="s0">from </span><span class="s1">time </span><span class="s0">import </span><span class="s1">sleep</span>
+<span class="s0">from </span><span class="s1">selenium </span><span class="s0">import </span><span class="s1">webdriver</span>
+<span class="s0">import </span><span class="s1">sqlite3 </span><span class="s0">as </span><span class="s1">sql</span>
+
+
+<span class="s1">headers = {</span><span class="s2">'User-Agent'</span><span class="s1">: </span><span class="s2">'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'</span><span class="s1">}</span>
+
+
+<span class="s1">urls = []</span>
+<span class="s1">product_urls = []</span>
+<span class="s1">list_of_reviews = []</span>
+
+<span class="s3"># Fetch url of 250 pages</span>
+<span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s4">1</span><span class="s0">,</span><span class="s4">251</span><span class="s1">):</span>
+    <span class="s1">urls.append(</span><span class="s2">f&quot;https://www.etsy.com/in-en/c/jewelry/earrings/ear-jackets-and-climbers?ref=pagination&amp;explicit=1&amp;page=</span><span class="s0">{</span><span class="s1">i</span><span class="s0">}</span><span class="s2">&quot;</span><span class="s1">)</span>
+
+<span class="s2">&quot;&quot;&quot; 
+Visit each page of ear-jackets and climbers and scrape 65 product url links in each page &quot;&quot;&quot;</span>
+<span class="s0">for </span><span class="s1">url </span><span class="s0">in </span><span class="s1">urls:</span>
+    <span class="s1">driver1=webdriver.Chrome(executable_path=</span><span class="s2">'C:/Users/productreview/Downloads/chromedriver_win32(1)/chromedriver.exe'</span><span class="s1">)</span>
+    <span class="s1">driver1.get(url)</span>
+    <span class="s1">sleep(</span><span class="s4">5</span><span class="s1">)</span>
+    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s4">1</span><span class="s0">, </span><span class="s4">65</span><span class="s1">):</span>
+        <span class="s1">product = driver1.find_element_by_xpath(</span><span class="s2">&quot;//div[@id='content']//div[contains(@class,'search-listings-group')]//ul//li['&quot;</span><span class="s1">+str(i)+</span><span class="s2">&quot;']/div/a&quot;</span><span class="s1">)</span>
+        <span class="s1">product_urls.append(product.get_attribute(</span><span class="s2">'href'</span><span class="s1">))</span>
+
+<span class="s1">driver=webdriver.Firefox(executable_path=</span><span class="s2">'C:/Users/productreview/Downloads/geckodriver-v0.29.1-win64/geckodriver.exe'</span><span class="s1">)</span>
+
+
+<span class="s2">&quot;&quot;&quot; product links are visited to fetch reviews&quot;&quot;&quot;</span>
+<span class="s0">for </span><span class="s1">product_url </span><span class="s0">in </span><span class="s1">product_urls:</span>
+    <span class="s0">try</span><span class="s1">:</span>
+        <span class="s1">driver.get(product_url)</span>
+        <span class="s1">sleep(</span><span class="s4">5</span><span class="s1">)</span>
+        <span class="s1">html = driver.page_source</span>
+        <span class="s1">soup = BeautifulSoup(html</span><span class="s0">,</span><span class="s2">'html'</span><span class="s1">)</span>
+        <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s4">4</span><span class="s1">):</span>
+            <span class="s0">try</span><span class="s1">:</span>
+                <span class="s1">list_of_reviews.append(soup.select(</span><span class="s2">f'#review-preview-toggle-</span><span class="s0">{</span><span class="s1">i</span><span class="s0">}</span><span class="s2">'</span><span class="s1">)[</span><span class="s4">0</span><span class="s1">].getText().strip())</span>
+            <span class="s0">except</span><span class="s1">:</span>
+                <span class="s0">continue</span>
+        <span class="s0">while</span><span class="s1">(</span><span class="s0">True</span><span class="s1">):</span>
+            <span class="s0">try</span><span class="s1">:</span>
+                <span class="s1">next_button = driver.find_element_by_xpath(</span><span class="s2">'//*[@id=&quot;reviews&quot;]/div[2]/nav/ul/li[position() = last()]/a[contains(@href, &quot;https&quot;)]'</span><span class="s1">)</span>
+                <span class="s0">if </span><span class="s1">next_button != </span><span class="s0">None</span><span class="s1">:</span>
+                    <span class="s1">next_button.click()</span>
+                    <span class="s1">sleep(</span><span class="s4">5</span><span class="s1">)</span>
+                    <span class="s1">html = driver.page_source</span>
+                    <span class="s1">soup = BeautifulSoup(html</span><span class="s0">,</span><span class="s2">'html'</span><span class="s1">)</span>
+                    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(</span><span class="s4">6</span><span class="s1">):</span>
+                        <span class="s0">try</span><span class="s1">: </span>
+                            <span class="s1">list_of_reviews.append(soup.select(</span><span class="s2">f'#review-preview-toggle-</span><span class="s0">{</span><span class="s1">i</span><span class="s0">}</span><span class="s2">'</span><span class="s1">)[</span><span class="s4">0</span><span class="s1">].getText().strip())</span>
+                        <span class="s0">except</span><span class="s1">:</span>
+                            <span class="s0">continue</span>
+            <span class="s0">except </span><span class="s1">Exception </span><span class="s0">as </span><span class="s1">e:</span>
+                <span class="s1">print(</span><span class="s2">'finsish : '</span><span class="s0">, </span><span class="s1">e)</span>
+                <span class="s0">break</span>
+    <span class="s0">except</span><span class="s1">:</span>
+        <span class="s0">continue</span>
+    
+<span class="s1">scrapedReviewsAll = pd.DataFrame(list_of_reviews</span><span class="s0">, </span><span class="s1">index = </span><span class="s0">None, </span><span class="s1">columns = [</span><span class="s2">'reviews'</span><span class="s1">])         </span>
+<span class="s1">scrapedReviewsAll.to_csv(</span><span class="s2">'C:/productreview/scraped_Reviews_etsyfull1.csv'</span><span class="s1">)</span>
+<span class="s1">df = pd.read_csv(</span><span class="s2">'C:/productreview/scraped_Reviews_etsyfull1.csv'</span><span class="s1">)</span>
+<span class="s1">conn = sql.connect(</span><span class="s2">'C:/productreview/scraped_Reviews_etsyfull1.db'</span><span class="s1">)</span>
+<span class="s1">df.to_sql(</span><span class="s2">'C:/productreview/scraped_ReviewsTable_etsyfull1'</span><span class="s0">, </span><span class="s1">conn)    </span>
+<span class="s1">print(len(list_of_reviews))</span>
+<span class="s1">print(len(product_urls))</span>
+<span class="s1">urls_df=pd.DataFrame(urls</span><span class="s0">,</span><span class="s1">index=</span><span class="s0">None</span><span class="s1">)</span>
+<span class="s1">urls_df.to_csv(</span><span class="s2">'C:/productreview/urls.csv'</span><span class="s1">)</span>
+<span class="s1">product_urls_df=pd.DataFrame(product_urls</span><span class="s0">,</span><span class="s1">index=</span><span class="s0">None</span><span class="s1">)</span>
+<span class="s1">product_urls_df.to_csv(</span><span class="s2">'C:/productreview/product_urls.csv'</span><span class="s1">)</span>
+
+<span class="s1">driver.close()</span>
+<span class="s1">driver.quit()</span>
+
+</pre>
+</body>
+</html>

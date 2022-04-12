@@ -1,0 +1,75 @@
+<html>
+<head>
+<title>data_preprocessing.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #629755; font-style: italic;}
+.s3 { color: #cc7832;}
+.s4 { color: #6a8759;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+data_preprocessing.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env python3</span>
+<span class="s0"># -*- coding: utf-8 -*-</span>
+<span class="s2">&quot;&quot;&quot; 
+Created on Sat Mar 13 13:35:38 2021 
+ 
+@author: varunnagrare 
+&quot;&quot;&quot;</span>
+
+<span class="s3">import </span><span class="s1">pickle</span>
+<span class="s3">from </span><span class="s1">sklearn.feature_extraction.text </span><span class="s3">import </span><span class="s1">TfidfVectorizer</span>
+<span class="s3">from </span><span class="s1">sklearn.metrics </span><span class="s3">import </span><span class="s1">confusion_matrix</span><span class="s3">, </span><span class="s1">roc_auc_score</span>
+<span class="s3">from </span><span class="s1">sklearn.linear_model </span><span class="s3">import </span><span class="s1">LogisticRegression</span>
+<span class="s3">from </span><span class="s1">sklearn.model_selection </span><span class="s3">import </span><span class="s1">train_test_split</span>
+<span class="s3">import </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np</span>
+<span class="s3">import </span><span class="s1">pandas </span><span class="s3">as </span><span class="s1">pd</span>
+
+<span class="s1">data = pd.read_csv(</span><span class="s4">'balanced_reviews.csv'</span><span class="s1">)</span>
+
+<span class="s1">data.dropna(inplace=</span><span class="s3">True</span><span class="s1">)</span>
+
+<span class="s1">data = data[data[</span><span class="s4">'overall'</span><span class="s1">] != </span><span class="s5">3</span><span class="s1">]</span>
+
+<span class="s1">data[</span><span class="s4">'Positivity'</span><span class="s1">] = np.where(data[</span><span class="s4">'overall'</span><span class="s1">] &gt; </span><span class="s5">3</span><span class="s3">, </span><span class="s5">1</span><span class="s3">, </span><span class="s5">0</span><span class="s1">)</span>
+
+<span class="s1">data[</span><span class="s4">'Positivity'</span><span class="s1">].value_counts()</span>
+
+<span class="s1">features_train</span><span class="s3">, </span><span class="s1">features_test</span><span class="s3">, </span><span class="s1">labels_train</span><span class="s3">, </span><span class="s1">labels_test = train_test_split(</span>
+    <span class="s1">data[</span><span class="s4">'reviewText'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">data[</span><span class="s4">'Positivity'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">random_state=</span><span class="s5">42</span><span class="s1">)</span>
+
+<span class="s0"># Using TF-IDF Vectorizer</span>
+<span class="s1">vect = TfidfVectorizer(min_df=</span><span class="s5">5</span><span class="s1">).fit(features_train)</span>
+
+<span class="s1">features_train_vectorized = vect.transform(features_train)</span>
+
+<span class="s1">model = LogisticRegression()</span>
+<span class="s1">model.fit(features_train_vectorized</span><span class="s3">, </span><span class="s1">labels_train)</span>
+
+<span class="s1">predictions = model.predict(vect.transform(features_test))</span>
+
+<span class="s1">confusion_matrix(labels_test</span><span class="s3">, </span><span class="s1">predictions)</span>
+
+<span class="s1">roc_auc_score(labels_test</span><span class="s3">, </span><span class="s1">predictions)</span>
+
+<span class="s1">pkl_filename = </span><span class="s4">'model_files/trained_model.pkl'</span>
+<span class="s1">vocab_filename = </span><span class="s4">'model_files/vocab.pkl'</span>
+
+<span class="s0"># Writing model to pickle file</span>
+<span class="s3">with </span><span class="s1">open(pkl_filename</span><span class="s3">, </span><span class="s4">'wb'</span><span class="s1">) </span><span class="s3">as </span><span class="s1">file:</span>
+    <span class="s1">pickle.dump(model</span><span class="s3">, </span><span class="s1">file)</span>
+
+<span class="s0"># Saving TF-IDF vocabulary</span>
+<span class="s3">with </span><span class="s1">open(vocab_filename</span><span class="s3">, </span><span class="s4">'wb'</span><span class="s1">) </span><span class="s3">as </span><span class="s1">file:</span>
+    <span class="s1">pickle.dump(vect.vocabulary_</span><span class="s3">, </span><span class="s1">file)</span>
+</pre>
+</body>
+</html>

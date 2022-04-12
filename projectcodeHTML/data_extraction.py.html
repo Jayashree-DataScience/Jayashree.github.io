@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>data_extraction.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #808080;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #629755; font-style: italic;}
+.s3 { color: #cc7832;}
+.s4 { color: #6a8759;}
+.s5 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+data_extraction.py</font>
+</center></td></tr></table>
+<pre><span class="s0">#!/usr/bin/env python3</span>
+<span class="s0"># -*- coding: utf-8 -*-</span>
+<span class="s2">&quot;&quot;&quot; 
+Created on Fri Mar 12 01:22:26 2021 
+ 
+@author: varunnagrare 
+&quot;&quot;&quot;</span>
+
+<span class="s0"># Step 1: Extracting equal chunks of data from large JSON data.</span>
+
+<span class="s3">from </span><span class="s1">glob </span><span class="s3">import </span><span class="s1">glob</span>
+<span class="s3">import </span><span class="s1">pandas </span><span class="s3">as </span><span class="s1">pd</span>
+
+<span class="s1">data = pd.read_json(</span><span class="s4">'Clothing_Shoes_and_Jewelry.json'</span><span class="s3">,</span>
+                    <span class="s1">chunksize=</span><span class="s5">1000000</span><span class="s3">, </span><span class="s1">lines=</span><span class="s3">True</span><span class="s1">)</span>
+
+<span class="s0"># for cols in data:</span>
+<span class="s0">#     cols</span>
+<span class="s0">#     break</span>
+
+<span class="s0"># cols.columns</span>
+
+<span class="s1">counter = </span><span class="s5">1</span>
+
+<span class="s3">for </span><span class="s1">chunk </span><span class="s3">in </span><span class="s1">data:</span>
+    <span class="s1">new_df = pd.DataFrame(chunk[[</span><span class="s4">'overall'</span><span class="s3">, </span><span class="s4">'reviewText'</span><span class="s3">, </span><span class="s4">'summary'</span><span class="s1">]])</span>
+    <span class="s1">new_df1 = new_df[new_df[</span><span class="s4">'overall'</span><span class="s1">] == </span><span class="s5">5</span><span class="s1">].sample(</span><span class="s5">4000</span><span class="s1">)</span>
+    <span class="s1">new_df2 = new_df[new_df[</span><span class="s4">'overall'</span><span class="s1">] == </span><span class="s5">4</span><span class="s1">].sample(</span><span class="s5">4000</span><span class="s1">)</span>
+    <span class="s1">new_df3 = new_df[new_df[</span><span class="s4">'overall'</span><span class="s1">] == </span><span class="s5">3</span><span class="s1">].sample(</span><span class="s5">10000</span><span class="s1">)</span>
+    <span class="s1">new_df4 = new_df[new_df[</span><span class="s4">'overall'</span><span class="s1">] == </span><span class="s5">2</span><span class="s1">].sample(</span><span class="s5">4000</span><span class="s1">)</span>
+    <span class="s1">new_df5 = new_df[new_df[</span><span class="s4">'overall'</span><span class="s1">] == </span><span class="s5">1</span><span class="s1">].sample(</span><span class="s5">4000</span><span class="s1">)</span>
+
+    <span class="s1">new_df6 = pd.concat([new_df1</span><span class="s3">, </span><span class="s1">new_df2</span><span class="s3">, </span><span class="s1">new_df3</span><span class="s3">, </span><span class="s1">new_df4</span><span class="s3">,</span>
+                         <span class="s1">new_df5]</span><span class="s3">, </span><span class="s1">axis=</span><span class="s5">0</span><span class="s3">, </span><span class="s1">ignore_index=</span><span class="s3">True</span><span class="s1">)</span>
+    <span class="s1">new_df6.to_csv(</span><span class="s4">f&quot;filtered_chunks/</span><span class="s3">{</span><span class="s1">counter</span><span class="s3">}</span><span class="s4">.csv&quot;</span><span class="s3">, </span><span class="s1">index=</span><span class="s3">False</span><span class="s1">)</span>
+    <span class="s1">counter += </span><span class="s5">1</span>
+
+
+<span class="s0"># Step 2 : Combining extracted chunks into a single file</span>
+
+<span class="s1">filenames = [file </span><span class="s3">for </span><span class="s1">file </span><span class="s3">in </span><span class="s1">glob(</span><span class="s4">'filtered_chunks/*.csv'</span><span class="s1">)]</span>
+
+<span class="s1">combined_csv = pd.concat([pd.read_csv(file) </span><span class="s3">for </span><span class="s1">file </span><span class="s3">in </span><span class="s1">filenames]).sort_values(</span>
+    <span class="s1">[</span><span class="s4">'overall'</span><span class="s1">]</span><span class="s3">, </span><span class="s1">ascending=</span><span class="s3">False</span><span class="s1">)</span>
+
+<span class="s1">combined_csv.to_csv(</span><span class="s4">&quot;balanced_reviews.csv&quot;</span><span class="s3">, </span><span class="s1">index=</span><span class="s3">False</span><span class="s1">)</span>
+</pre>
+</body>
+</html>
