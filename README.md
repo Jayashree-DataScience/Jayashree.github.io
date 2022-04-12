@@ -1,2 +1,2 @@
 # Jayashree.github.io
-Thank you MLPlus team for the mentoring and guiding .
+Thank you MLPlus team for the mentorship and guidane.
